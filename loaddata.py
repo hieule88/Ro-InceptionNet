@@ -7,7 +7,8 @@ from data.aircraft import Aircraft
 IMG_SIZE = 299
 
 class Dataset():
-    def __init__(self) -> None:
+    def __init__(self, basedir) -> None:
+        self.basedir = basedir
         self.train_ds = self.transform_data(train=True)
         self.test_ds = self.transform_data()
         self.image_ids, self.targets, self.classes, self.class_to_idx = self.train_ds.find_classes()
@@ -29,7 +30,7 @@ class Dataset():
                                 T.ToTensor()
                             ]
                         )
-        data = Aircraft('./data/aircraft', train=train, download=False, transform=transform)
+        data = Aircraft(self.basedir + '/data/aircraft', train=train, download=False, transform=transform)
         return data
 
     def dataloader(self, batch_size, train=False):

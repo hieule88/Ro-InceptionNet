@@ -1,6 +1,15 @@
 import torch 
 from loaddata import Dataset
 from  tqdm import tqdm
+import argparse
+
+def parse_args():
+    parser = argparse.ArgumentParser(description='Model checkpoint Config', add_help=False)
+    parser.add_argument("--modeldir", type=str, default='.',
+                    help="Dir to the model's checkpoint")
+    args = parser.parse_args()
+
+    return args
 
 def eval(model):
     dataset = Dataset()
@@ -33,7 +42,7 @@ def eval(model):
         tqdm_stream_check_train.set_description("Acc. for TRAIN SET")
 
     train_acc = corr / len(train_ds)
-    train_acc
+    print('Train acc:',train_acc)
 
     tqdm_stream_check_val = tqdm(test_dl)
     corr = 0
@@ -51,11 +60,9 @@ def eval(model):
         tqdm_stream_check_val.set_description("Acc. for TEST SET")
 
     test_acc = corr / len(test_ds)
-    test_acc
+    print('Test acc:',test_acc)
 
 if __name__ == '__main__':
-    #####################
-    #load model
-    #####################
-    model = 'model'
+    args = parse_args()
+    model = torch.load(args.modeldir)
     eval(model)
