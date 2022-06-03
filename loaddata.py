@@ -12,6 +12,8 @@ class Dataset():
         self.train_ds = self.transform_data(train=True)
         self.test_ds = self.transform_data()
         self.image_ids, self.targets, self.classes, self.class_to_idx = self.train_ds.find_classes()
+        self.classes = [c[:-1] for c in self.classes]
+        self.class_to_idx = {c[:-1]:idx for c, idx in self.class_to_idx.items()}
     def transform_data(self, train=False):
         if train :
             transform = T.Compose(

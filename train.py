@@ -7,7 +7,8 @@ from torchvision.utils import make_grid
 from model import Model, InceptionV4, rand_bbox
 from loaddata import Dataset
 import argparse
-import time 
+from datetime import datetime
+
 def parse_args():
     parser = argparse.ArgumentParser(description='Dataset Config', add_help=False)
     parser.add_argument("--basedir", type=str, default='.',
@@ -25,10 +26,10 @@ def main():
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     lr =  0.0001
-    epochs = 30
+    epochs = 50
 
     model = InceptionV4()
-    model = Model(model.model, args.basedir)
+    model = Model(model.model, args.basedir, dataset.classes)
     criterion = torch.nn.NLLLoss()
     optimizer = torch.optim.AdamW(params=model.parameters(), 
                                 lr=lr, weight_decay=0.015)
@@ -101,7 +102,9 @@ def main():
         print(f"RESULT Epoch{e+1:3d}, Train Loss:{running_loss:.6f}, Train Acc.:{train_acc:.6f}") #, Valid Acc.:{val_acc:.6f}")
     
     #add dump model
-    torch.save(model, args.basedir + 'checkpoint/model_' + str(train_acc) + '.pth')
+    now = datetime.now()
+    current_time = now.strftime("%d-%m-%Y_%H:%M:%S")
+    torch.save(model, args.basedir + '/checkpoint/model_' + str(current_time) + '.pth')
 
 if __name__ == '__main__':
     main()

@@ -43,6 +43,7 @@ def sentences_to_indices(X, word_to_index, max_len):
 
     for i in range(m):  # loop over training examples
         # Convert the ith training sentence in lower case and split is into words. You should get a list of words.
+        sentence_words = X[i].replace('-', ' ')
         sentence_words = (X[i].lower()).split()
         sentence_words = sentence_words[:max_len]
         # Initialize j to 0
@@ -50,39 +51,38 @@ def sentences_to_indices(X, word_to_index, max_len):
         # Loop over the words of sentence_words
         for w in sentence_words:
             # Set the (i,j)th entry of X_indices to the index of the correct word.
-            X_indices[i, j] = word_to_index[w]
+            try:
+                X_indices[i, j] = word_to_index[w]
+            except:
+                X_indices[i, j] = 0
             # Increment j to j + 1
             j = j + 1
     return X_indices
 
-def class_embedding(sentence, word2vec, word2index, emb_dim):
+def class_embedding(sentence, word2vec, emb_dim):
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     batch, num_class, max_words = sentence.shape
-    rnn_size = 1024
+    rnn_size = 1536
     sentence = torch.reshape(sentence, [batch*num_class, max_words])
     sentence = sentence.to(torch.int32)
     # create word embedding
-    embed_ques_W = torch.tensor(word2vec)
+    embed_ques_W = word2vec
     # create LSTM
-    stacked_lstm = torch.nn.LSTM(input_size=emb_dim, hidden_size=rnn_size, num_layers=2, dropout=0.2)
-    state = stacked_lstm.zero_state(batch*num_class, tf.float32)
-
+    lstm_1 = torch.nn.LSTMCell(emb_dim, rnn_size, device=device)
+    lstm_dropout_1 = torch.nn.Sequential(lstm_1, torch.nn.Dropout(0.2))
+    lstm_2 = torch.nn.LSTMCell(rnn_size, rnn_size)
+    lstm_dropout_2 = torch.nn.Sequential(lstm_2, torch.nn.Dropout(0.2))
+    stacked_lstm = torch.nn.Sequential(lstm_dropout_1, lstm_2)
+    hx = torch.zeros(batch*num_class, rnn_size, device=device)
+    cx = torch.zeros(batch*num_class, rnn_size, device=device)
     for i in range(max_words):
-        if i > 0:
-            tf.get_variable_scope().reuse_variables()
+        cls_emb_linear = torch.nn.functional.embedding(sentence[:, i],embed_ques_W)
+        # embedded_users = torch.unsqueeze(embedded_user, -1)
+        # cls_emb_linear = tf.nn.embedding_lookup(embed_ques_W, sentence[:, i])
+        cls_emb_drop = torch.nn.Dropout(0.2)(cls_emb_linear)
+        cls_emb = torch.nn.Tanh()(cls_emb_drop)
+        hx, cx = lstm_1(cls_emb, (hx, cx))
 
-        cls_emb_linear = tf.nn.embedding_lookup(embed_ques_W, sentence[:, i])
-        cls_emb_drop = tf.nn.dropout(cls_emb_linear, .8)
-        cls_emb = tf.tanh(cls_emb_drop)
-
-        output, state = stacked_lstm(cls_emb, state)
+    output = hx
     output = torch.reshape(output, [batch, num_class, rnn_size])
     return output
-
-classes = pickle.load(open('data/%s_classes.pkl' % FLAGS.dataset_name, 'rb'))
-classes = np.array(classes)
-word2index, index2word, _ = read_glove_vecs('data/%s_glove6b_init_300d.npy' % FLAGS.dataset_name,
-                                    'data/%s_dictionary.pkl' % FLAGS.dataset_name)
-word2index[index2word[0]] = len(word2index)
-indices = sentences_to_indices(classes, word2index, 3)
-indices = torch.tensor(indices)
-indices = tf.broadcast_to(indices, [FLAGS.batch_size, len(classes), 3])

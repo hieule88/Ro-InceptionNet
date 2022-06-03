@@ -7,12 +7,14 @@ def parse_args():
     parser = argparse.ArgumentParser(description='Model checkpoint Config', add_help=False)
     parser.add_argument("--modeldir", type=str, default='.',
                     help="Dir to the model's checkpoint")
+    parser.add_argument("--basedir", type=str, default='.',
+                    help="Dir to the model's checkpoint")
     args = parser.parse_args()
 
     return args
 
-def eval(model):
-    dataset = Dataset()
+def eval(model, basedir):
+    dataset = Dataset(basedir)
     train_ds = dataset.train_ds
     test_ds = dataset.test_ds
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -65,4 +67,4 @@ def eval(model):
 if __name__ == '__main__':
     args = parse_args()
     model = torch.load(args.modeldir)
-    eval(model)
+    eval(model, args.basedir)
