@@ -1,5 +1,5 @@
-# Ro-InceptionNet
-A robust InceptionNet model for FPT AI Residency Project
+# Ro-SAC
+A robust SAC model for FPT AI Residency Project
 
 # Run
 Run notebook train.ipynb to training and evaluating backbone model with R-SAC
