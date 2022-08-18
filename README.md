@@ -1,5 +1,5 @@
 # Ro-SAC
-A robust SAC model for FPT AI Residency Project
+A robust SAC model for FPT AI Residency Project. This repository provides the implementation of my paper: Ro-SAC https://drive.google.com/file/d/1UnkOXxW58WwUjrfuybs8ilj6NVUtvc0Q/view?usp=sharing
 
 # Run
 Run notebook train.ipynb to training and evaluating backbone model with R-SAC
